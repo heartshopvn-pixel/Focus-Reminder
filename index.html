@@ -41,6 +41,21 @@
           },
           true
         );
+
+        // Fallback loader when deployed directly from raw GitHub branch root without a build step
+        window.__loadStaticBundle = function () {
+          if (window.__staticBundleLoaded) return;
+          window.__staticBundleLoaded = true;
+          var link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = './public/gh-pages.css';
+          document.head.appendChild(link);
+
+          var script = document.createElement('script');
+          script.type = 'module';
+          script.src = './public/gh-pages.js';
+          document.body.appendChild(script);
+        };
       })();
     </script>
     <title>Focus + Reminder</title>
@@ -55,6 +70,17 @@
   </head>
   <body class="h-full">
     <div id="root" class="min-h-full flex flex-col"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/main.tsx" onerror="window.__loadStaticBundle && window.__loadStaticBundle()"></script>
+    <script>
+      // Also trigger static bundle fallback on *.github.io if #root is still empty after 500ms (e.g. raw .tsx MIME error)
+      if (window.location.hostname.indexOf('github.io') !== -1) {
+        setTimeout(function () {
+          var root = document.getElementById('root');
+          if (root && !root.hasChildNodes() && window.__loadStaticBundle) {
+            window.__loadStaticBundle();
+          }
+        }, 500);
+      }
+    </script>
   </body>
 </html>

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
-    "build": "vite build",
+    "build": "rm -f public/gh-pages.js public/gh-pages.css && vite build && cp dist/assets/*.js public/gh-pages.js && cp dist/assets/*.css public/gh-pages.css",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit"
