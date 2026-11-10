@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="vi" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function () {
+        try {
+          var originalFetch = window.fetch;
+          if (originalFetch) {
+            var currentFetch = originalFetch.bind(window);
+            Object.defineProperty(window, 'fetch', {
+              configurable: true,
+              enumerable: true,
+              get: function () {
+                return currentFetch;
+              },
+              set: function (fn) {
+                if (typeof fn === 'function') {
+                  currentFetch = fn;
+                }
+              }
+            });
+          }
+        } catch (e) {}
+
+        window.addEventListener(
+          'error',
+          function (event) {
+            var msg = (event && event.message) || '';
+            var filename = (event && event.filename) || '';
+            if (
+              msg.indexOf('Cannot set property fetch') !== -1 ||
+              filename.indexOf('chrome-extension://') === 0 ||
+              filename.indexOf('moz-extension://') === 0
+            ) {
+              event.stopImmediatePropagation();
+              event.preventDefault();
+              return false;
+            }
+          },
+          true
+        );
+      })();
+    </script>
+    <title>Focus + Reminder</title>
+    <meta name="description" content="Ứng dụng đồng hồ tập trung Pomodoro kết hợp 5 đồng hồ nhắc việc song song, đồng bộ Google Sheets và điều khiển qua Telegram Bot." />
+    <meta property="og:title" content="Focus + Reminder" />
+    <meta property="og:description" content="Ứng dụng đồng hồ tập trung Pomodoro kết hợp 5 đồng hồ nhắc việc song song, đồng bộ Google Sheets và điều khiển qua Telegram Bot." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  </head>
+  <body class="h-full">
+    <div id="root" class="min-h-full flex flex-col"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
