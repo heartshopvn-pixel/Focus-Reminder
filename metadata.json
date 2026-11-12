@@ -1,6 +1,6 @@
 {
   "name": "Focus + Reminder",
   "description": "Ứng dụng đồng hồ tập trung Pomodoro kết hợp 5 đồng hồ nhắc việc song song, đồng bộ Google Sheets và điều khiển qua Telegram Bot.",
-  "requestFramePermissions": [],
+  "requestFramePermissions": ["microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

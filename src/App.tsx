@@ -8,6 +8,7 @@ import { HistoryItem, ReminderItem, SoundType } from './types';
 import { playSynthesizedSound, SOUND_OPTIONS } from './utils/sound';
 import TodoListCard from './components/TodoListCard';
 import ReminderSection, { formatReminderTime } from './components/ReminderSection';
+import VoiceInputButton from './components/VoiceInputButton';
 
 const DEFAULT_SCRIPT_URL =
   'https://script.google.com/macros/s/AKfycbxr-zE8YL3yepDSBrt7reZtYcgglWcru8bgF1TgvlweL0Tr4pzRc7Xd0DA0B16uBLkwtw/exec';
@@ -1045,7 +1046,7 @@ export default function App() {
   const canFinishSession = isRunning || totalSeconds < initialSeconds;
 
   return (
-    <div className="bg-gradient-to-br from-slate-50 via-slate-100 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col justify-between antialiased">
+    <div className="overflow-x-clip bg-gradient-to-br from-slate-50 via-slate-100 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col justify-between antialiased">
       {/* Toast Notification */}
       <div
         className={`fixed top-5 right-5 z-50 transform transition-transform duration-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl rounded-2xl p-4 flex items-center space-x-3 max-w-sm pointer-events-none ${
@@ -1059,7 +1060,7 @@ export default function App() {
         </div>
       </div>
 
-      <div className="max-w-6xl w-full mx-auto p-4 sm:p-6 my-auto">
+      <div className="max-w-[1440px] w-full mx-auto p-4 sm:p-6 my-auto">
         {/* Header */}
         <header className="flex justify-between items-center mb-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-4 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-700/60">
           <div className="flex items-center space-x-2.5">
@@ -1118,9 +1119,9 @@ export default function App() {
           </div>
         </header>
 
-        {/* Active Dock on Right Screen Edge */}
+        {/* Active Dock on Mobile/Tablet when scrolled */}
         {activeDockItems.length > 0 && (
-          <div className="fixed right-3 sm:right-5 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center space-y-2.5 pointer-events-auto max-h-[90vh] overflow-y-auto py-2 px-1">
+          <div className="lg:hidden fixed right-3 sm:right-5 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center space-y-2.5 pointer-events-auto max-h-[90vh] overflow-y-auto py-2 px-1">
             {activeDockItems.map((rem) => {
               const ratio = rem.initialSeconds > 0 ? rem.totalSeconds / rem.initialSeconds : 0;
               const offset = MINI_DOCK_CIRCUMFERENCE * (1 - ratio);
@@ -1197,12 +1198,17 @@ export default function App() {
           </div>
         )}
 
-        {/* Main 2-Column Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-          {/* Left Column: Focus Work Timer + To-Do List + History */}
-          <div className="lg:col-span-7 flex flex-col gap-6">
+        {/* Main 3-Column Grid: Left = To-Do List | Center = Focus Work | Right = Reminders */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 xl:gap-6 items-stretch">
+          {/* Left Column (3 cols): To-Do List */}
+          <div className="lg:col-span-3 flex flex-col relative z-20">
+            <TodoListCard onNotify={showToast} />
+          </div>
+
+          {/* Center Column (5 cols): Focus Work Timer + History */}
+          <div className="lg:col-span-5 flex flex-col gap-6">
             {/* Focus Work Timer Card */}
-            <div className="w-full bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200/60 dark:border-slate-700/60 text-center">
+            <div className="w-full bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-7 shadow-xl border border-slate-200/60 dark:border-slate-700/60 text-center">
               <div className="mb-4 max-w-md mx-auto">
                 <div className="flex justify-between items-center mb-1.5 px-1">
                   <label className="text-xs font-medium text-slate-500 dark:text-slate-400">
@@ -1253,7 +1259,7 @@ export default function App() {
                         localStorage.setItem('focus_sound_type', val);
                         playTimerSound('main', val);
                       }}
-                      className="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium max-w-[160px] truncate"
+                      className="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium max-w-[150px] truncate"
                     >
                       {SOUND_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>
@@ -1285,7 +1291,7 @@ export default function App() {
               </div>
 
               {/* Main Focus Ring with Direct Inline Time Editing */}
-              <div className="relative w-64 h-64 mx-auto my-2 flex items-center justify-center">
+              <div className="relative w-60 h-60 sm:w-64 sm:h-64 mx-auto my-2 flex items-center justify-center">
                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 220 220">
                   <circle
                     cx="110"
@@ -1346,7 +1352,11 @@ export default function App() {
                         setClockDraft(defaultDraft);
                         setIsEditingClock(true);
                       }}
-                      title={isRunning ? 'Tạm dừng để sửa giờ' : 'Bấm để nhập trực tiếp số phút (VD: 45 hoặc 25:30)'}
+                      title={
+                        isRunning
+                          ? 'Tạm dừng để sửa giờ'
+                          : 'Bấm để nhập trực tiếp số phút (VD: 45 hoặc 25:30)'
+                      }
                       className={`text-5xl sm:text-6xl font-black tracking-tight text-slate-900 dark:text-white font-mono px-3 py-1 rounded-2xl transition ${
                         isRunning
                           ? 'cursor-default'
@@ -1367,14 +1377,14 @@ export default function App() {
               </div>
 
               {/* Action Buttons: Start/Pause + Red Finish + Reset */}
-              <div className="flex flex-wrap justify-center items-center gap-3 mt-6">
+              <div className="flex flex-wrap justify-center items-center gap-2.5 mt-6">
                 <button
                   type="button"
                   onClick={toggleTimer}
                   className={
                     isRunning
-                      ? 'bg-amber-600 hover:bg-amber-700 text-white font-semibold px-6 py-3.5 rounded-2xl shadow-lg transition active:scale-95 flex items-center space-x-2'
-                      : 'bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3.5 rounded-2xl shadow-lg shadow-indigo-500/30 transition active:scale-95 flex items-center space-x-2'
+                      ? 'bg-amber-600 hover:bg-amber-700 text-white font-semibold px-5 py-3 rounded-2xl shadow-lg transition active:scale-95 flex items-center space-x-2 text-sm'
+                      : 'bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-3 rounded-2xl shadow-lg shadow-indigo-500/30 transition active:scale-95 flex items-center space-x-2 text-sm'
                   }
                 >
                   <span>{isRunning ? '⏸' : '▶'}</span>
@@ -1384,7 +1394,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={finishTimerImmediately}
-                  className={`bg-rose-600 hover:bg-rose-700 text-white font-semibold px-6 py-3.5 rounded-2xl shadow-lg shadow-rose-500/30 transition active:scale-95 flex items-center space-x-2 ${
+                  className={`bg-rose-600 hover:bg-rose-700 text-white font-semibold px-5 py-3 rounded-2xl shadow-lg shadow-rose-500/30 transition active:scale-95 flex items-center space-x-2 text-sm ${
                     canFinishSession ? '' : 'opacity-60'
                   }`}
                   title="Kết thúc ngay phiên Focus và ghi số phút vào Google Sheet"
@@ -1396,18 +1406,15 @@ export default function App() {
                 <button
                   type="button"
                   onClick={resetTimer}
-                  className="bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-semibold px-5 py-3.5 rounded-2xl transition active:scale-95"
+                  className="bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-semibold px-4 py-3 rounded-2xl transition active:scale-95 text-sm"
                 >
                   Đặt lại
                 </button>
               </div>
             </div>
 
-            {/* To-Do List Card */}
-            <TodoListCard />
-
             {/* History Log */}
-            <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-xl border border-slate-200/60 dark:border-slate-700/60">
+            <div className="flex-1 bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-xl border border-slate-200/60 dark:border-slate-700/60">
               <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
                 <h3 className="font-bold text-sm sm:text-base">
                   📊 Nhật ký Work hoàn thành ({history.length})
@@ -1441,7 +1448,12 @@ export default function App() {
                     value={manualTaskInput}
                     onChange={(e) => setManualTaskInput(e.target.value)}
                     placeholder="Tên phiên"
-                    className="flex-1 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs"
+                    className="flex-1 min-w-0 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs"
+                  />
+                  <VoiceInputButton
+                    size="sm"
+                    onNotify={showToast}
+                    onTranscript={(spoken) => setManualTaskInput(spoken)}
                   />
                   <input
                     type="number"
@@ -1491,8 +1503,8 @@ export default function App() {
             </div>
           </div>
 
-          {/* Right Column: Top = Orange Reminder Nhắc Việc, Bottom = Blue Reminder Routine */}
-          <div className="lg:col-span-5 flex flex-col justify-between gap-6">
+          {/* Right Column (4 cols): Top = Orange Reminder Nhắc Việc, Bottom = Blue Reminder Routine */}
+          <div className="lg:col-span-4 flex flex-col justify-between gap-6">
             {/* Top Group: One-off Reminders */}
             <div>
               <ReminderSection
@@ -1516,6 +1528,7 @@ export default function App() {
                 onReset={(id) => resetItemInList(setReminders, id)}
                 onPlaySound={(id, override) => playTimerSound(id, override)}
                 onUploadSound={(id, e) => uploadCustomSound(id, e)}
+                onNotify={showToast}
               />
             </div>
 
@@ -1542,6 +1555,7 @@ export default function App() {
                 onReset={(id) => resetItemInList(setRoutines, id)}
                 onPlaySound={(id, override) => playTimerSound(id, override)}
                 onUploadSound={(id, e) => uploadCustomSound(id, e)}
+                onNotify={showToast}
               />
             </div>
           </div>

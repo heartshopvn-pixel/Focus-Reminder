@@ -1,6 +1,7 @@
 import React from 'react';
 import { ReminderItem, SoundType } from '../types';
 import { SOUND_OPTIONS } from '../utils/sound';
+import VoiceInputButton from './VoiceInputButton';
 
 const SUB_CIRCUMFERENCE = 2 * Math.PI * 46;
 
@@ -25,6 +26,7 @@ interface ReminderSectionProps {
   onReset: (id: string) => void;
   onPlaySound: (id: string, override?: SoundType) => void;
   onUploadSound: (id: string, e: React.ChangeEvent<HTMLInputElement>) => void;
+  onNotify?: (title: string, desc: string) => void;
 }
 
 export default function ReminderSection({
@@ -40,6 +42,7 @@ export default function ReminderSection({
   onReset,
   onPlaySound,
   onUploadSound,
+  onNotify,
 }: ReminderSectionProps) {
   const isBlue = variant === 'blue';
 
@@ -88,28 +91,28 @@ export default function ReminderSection({
 
   return (
     <div
-      className={`bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-6 shadow-xl border ${theme.cardBorder}`}
+      className={`bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-5 shadow-xl border ${theme.cardBorder}`}
     >
-      <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
-        <div className="flex items-center gap-2">
-          <span className="text-xl">{theme.icon}</span>
-          <div>
-            <h2 className={`text-sm sm:text-base font-bold ${theme.titleText}`}>
+      <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-lg shrink-0">{theme.icon}</span>
+          <div className="min-w-0">
+            <h2 className={`text-sm sm:text-base font-bold truncate ${theme.titleText}`}>
               {heading} ({items.length})
             </h2>
-            <p className="text-[11px] text-slate-400">{subtitle}</p>
+            <p className="text-[11px] text-slate-400 truncate">{subtitle}</p>
           </div>
         </div>
         <button
           type="button"
           onClick={onAdd}
-          className={`px-3 py-1.5 rounded-xl text-xs font-bold ${theme.addBtn} text-white shadow-sm transition active:scale-95 whitespace-nowrap shrink-0`}
+          className={`px-2.5 py-1.5 rounded-xl text-xs font-bold ${theme.addBtn} text-white shadow-sm transition active:scale-95 whitespace-nowrap shrink-0`}
         >
           {addLabel}
         </button>
       </div>
 
-      <div className="flex flex-col space-y-4">
+      <div className="flex flex-col space-y-3.5">
         {items.map((rem) => {
           const ratio = rem.initialSeconds > 0 ? rem.totalSeconds / rem.initialSeconds : 0;
           const strokeOffset = SUB_CIRCUMFERENCE * (1 - ratio);
@@ -124,10 +127,10 @@ export default function ReminderSection({
           return (
             <div
               key={rem.id}
-              className={`${theme.itemBg} border rounded-2xl p-3.5 flex items-center gap-3.5 shadow-sm transition`}
+              className={`${theme.itemBg} border rounded-2xl p-3 flex items-center gap-3 shadow-sm transition`}
             >
               {/* Circular Progress */}
-              <div className="relative w-28 h-28 shrink-0 flex items-center justify-center">
+              <div className="relative w-24 h-24 xl:w-28 xl:h-28 shrink-0 flex items-center justify-center">
                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 110 110">
                   <circle
                     cx="55"
@@ -265,14 +268,27 @@ export default function ReminderSection({
                   </div>
                 )}
 
-                {/* Note Content Input */}
-                <input
-                  type="text"
-                  value={rem.note}
-                  onChange={(e) => onUpdate(rem.id, { note: e.target.value })}
-                  placeholder={isBlue ? 'Nhập nội dung routine...' : 'Nhập nội dung nhắc việc...'}
-                  className={`w-full px-3 py-1.5 mb-2 text-xs font-medium bg-white dark:bg-slate-800 border ${theme.inputBorder} rounded-xl focus:outline-none focus:ring-2 ${theme.focusRing}`}
-                />
+                {/* Note Content Input + Voice Button */}
+                <div className="flex items-center gap-1.5 mb-2">
+                  <input
+                    type="text"
+                    value={rem.note}
+                    onChange={(e) => onUpdate(rem.id, { note: e.target.value })}
+                    placeholder={
+                      isBlue ? 'Nhập nội dung routine...' : 'Nhập nội dung nhắc việc...'
+                    }
+                    className={`flex-1 min-w-0 px-3 py-1.5 text-xs font-medium bg-white dark:bg-slate-800 border ${theme.inputBorder} rounded-xl focus:outline-none focus:ring-2 ${theme.focusRing}`}
+                  />
+                  <VoiceInputButton
+                    size="sm"
+                    onNotify={onNotify}
+                    onTranscript={(spoken) =>
+                      onUpdate(rem.id, {
+                        note: rem.note.trim() ? `${rem.note.trim()} ${spoken}` : spoken,
+                      })
+                    }
+                  />
+                </div>
 
                 {/* Sound Select & MP3 */}
                 <div className="flex items-center justify-between gap-1.5 mb-2.5">
